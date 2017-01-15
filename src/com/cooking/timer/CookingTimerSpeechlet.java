@@ -108,28 +108,46 @@ public class CookingTimerSpeechlet implements Speechlet {
 		ItemCollection<QueryOutcome> itemResults = dbTable.query(CUSTOMER_ID, userId);
 		Iterator<Item> itemResultsIterator = itemResults.iterator();
 		Item queryResult = null;
-		String timerInProgress = "The following timers are running. ";
-		while(itemResultsIterator.hasNext()){
-			queryResult = itemResultsIterator.next();
-			long timeLeft = TimeUnit.MILLISECONDS.toSeconds((queryResult.getLong("PROJECTED ENDTIME") - System.currentTimeMillis()));
-			Period ptl = new Period(timeLeft);
-			ptl = ptl.normalizedStandard();
-			String tl = PeriodFormat.wordBased().print(ptl);
-			if("RUNNING".equals(queryResult.getString(PROGRESS)) && timeLeft > 0){
-				timerInProgress += queryResult.getString(FOOD_ID) + "with about " + tl + " left. ";
-			}
-		}
 		
-		 // Create the Simple card content.
-        SimpleCard card = new SimpleCard();
-        card.setTitle("Total Running Timers");
-        card.setContent(timerInProgress);
+		if(!itemResultsIterator.hasNext()){
+			
+			String noTimersRunning = "Sorry, there appear to be no timers running.";
+			
+			 // Create the Simple card content.
+	        SimpleCard card = new SimpleCard();
+	        card.setTitle("Total Running Timers");
+	        card.setContent(noTimersRunning);
 
-        // Create the plain text output.
-        PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
-        speech.setText(timerInProgress);
-        
-        return SpeechletResponse.newTellResponse(speech, card);
+	        // Create the plain text output.
+	        PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+	        speech.setText(noTimersRunning);
+						
+			return SpeechletResponse.newTellResponse(speech);
+		
+		} else {
+			String timerInProgress = "The following timers are running. ";
+			while(itemResultsIterator.hasNext()){
+				queryResult = itemResultsIterator.next();
+				long timeLeft = TimeUnit.MILLISECONDS.toSeconds((queryResult.getLong("PROJECTED ENDTIME") - System.currentTimeMillis()));
+				Period ptl = new Period(timeLeft);
+				ptl = ptl.normalizedStandard();
+				String tl = PeriodFormat.wordBased().print(ptl);
+				if("RUNNING".equals(queryResult.getString(PROGRESS)) && timeLeft > 0){
+					timerInProgress += queryResult.getString(FOOD_ID) + "with about " + tl + " left. ";
+				}
+			}
+			
+			 // Create the Simple card content.
+	        SimpleCard card = new SimpleCard();
+	        card.setTitle("Total Running Timers");
+	        card.setContent(timerInProgress);
+
+	        // Create the plain text output.
+	        PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+	        speech.setText(timerInProgress);
+	        
+	        return SpeechletResponse.newTellResponse(speech, card);
+		}
 	}
 	
 	
