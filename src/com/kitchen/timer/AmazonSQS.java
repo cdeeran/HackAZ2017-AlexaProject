@@ -1,4 +1,4 @@
-package com.cooking.timer;
+package com.kitchen.timer;
 
 import java.util.Iterator;
 
@@ -40,7 +40,7 @@ public class AmazonSQS {
 				while(itemResultsIterator.hasNext()){
 					queryResult = itemResultsIterator.next();	
 				}
-				CookingTimerScheduler timerDaemon = new CookingTimerScheduler(queryResult.getString(FOOD_ID), queryResult.getString(DURATION_TIME_IN_MILIS));
+				KitchenTimerScheduler timerDaemon = new KitchenTimerScheduler(queryResult.getString(FOOD_ID), queryResult.getString(DURATION_TIME_IN_MILIS), CUSTOMER_ID, message[0], FOOD_ID, message[1]);
 				sqsClient.deleteMessage(SQS_URL, rmrMessage.getReceiptHandle());
 			}
 		}

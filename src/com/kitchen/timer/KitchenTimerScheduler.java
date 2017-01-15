@@ -1,9 +1,13 @@
-package com.cooking.timer;
+package com.kitchen.timer;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.document.DeleteItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClient;
 import com.amazonaws.services.simpleemail.model.Body;
 import com.amazonaws.services.simpleemail.model.Content;
@@ -11,12 +15,19 @@ import com.amazonaws.services.simpleemail.model.Destination;
 import com.amazonaws.services.simpleemail.model.Message;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 
-public class CookingTimerScheduler {
+
+
+public class KitchenTimerScheduler {
 
 	private long taskDuration;
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	
+	private final static String COOKING_TIMER_TABLE = "Cooking_Timer";
+	private final static String CUSTOMER_ID = "Customer_ID";
+	private final static String FOOD_ID = "Food_Item";
+	private final static String DURATION_TIME_IN_MILIS = "DURATION_TIME_IN_MILIS";
 
-	public CookingTimerScheduler(String taskName, String durationInMilis) {
+	public KitchenTimerScheduler(String taskName, String durationInMilis, String customerId, String userId, String foodId, String foodItem) {
 
 		this.taskDuration = Long.parseLong(durationInMilis);
 
@@ -39,8 +50,8 @@ public class CookingTimerScheduler {
 												// the
 												// sandbox, this address
 												// must be verified.
-		final String BODY = task + " timer has successfully completed!";
-		final String SUBJECT = task + "Timer Finished!";
+		final String BODY = taskName + " timer has successfully completed, and has been removed from the database.";
+		final String SUBJECT = taskName + "Timer Finished!";
 
 		// Construct an object to contain the recipient address.
 		Destination destination = new Destination().withToAddresses(new String[] { TO });
@@ -73,11 +84,32 @@ public class CookingTimerScheduler {
 			AmazonSimpleEmailServiceClient client = new AmazonSimpleEmailServiceClient();
 			// Send the email.
 			client.sendEmail(request);
-			System.out.println("Email sent!");
+			System.out.println("Email sent successfully!");
 		} catch (Exception ex) {
 			System.out.println("The email was not sent.");
 			System.out.println("Error message: " + ex.getMessage());
 		}
+		
+		System.out.println("Deleteing timer: " + taskName + " from database......");
+		
+		deleteTask(userId, foodItem);
+		
+	}
+	
+	
+	private void deleteTask(String user, String food){
+		
+		AmazonDynamoDBClient timerDb = new AmazonDynamoDBClient();
+		DynamoDB dynamoDb = new DynamoDB(timerDb);
+		Table dbTable = dynamoDb.getTable(COOKING_TIMER_TABLE);
+		DeleteItemOutcome itemResults = dbTable.deleteItem(CUSTOMER_ID, user, FOOD_ID, food);
+		
+		if(itemResults.getDeleteItemResult() != null){
+			System.out.println("Deletion successfull!");
+		} else {
+			System.out.println("Deletion failed!");
+		}
+		
 	}
 
 }

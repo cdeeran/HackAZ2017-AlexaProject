@@ -1,4 +1,4 @@
-package com.cooking.timer;
+package com.kitchen.timer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +24,7 @@ public final class LambdaFunctionHandler extends SpeechletRequestStreamHandler {
     }
 
     public LambdaFunctionHandler() {
-        super(new CookingTimerSpeechlet(), supportedApplicationIds);
+        super(new KitchenTimerSpeechlet(), supportedApplicationIds);
     }
 }
 
