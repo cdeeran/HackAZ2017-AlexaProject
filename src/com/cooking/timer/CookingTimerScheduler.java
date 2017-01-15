@@ -18,7 +18,7 @@ public class CookingTimerScheduler {
 
 		Runnable task = () -> {
 
-			System.out.println("Timer for: " + taskName + " has completed.");
+			System.out.println("Timer for " + taskName + " has completed.");
 			
 		};
 		
