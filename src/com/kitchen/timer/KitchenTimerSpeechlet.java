@@ -19,7 +19,7 @@ import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.SimpleCard;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-//import com.amazonaws.services.dynamodbv2.document.DeleteItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.DeleteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
@@ -46,11 +46,9 @@ public class KitchenTimerSpeechlet implements Speechlet {
 					session.getUser().getUserId());
 		} else if ("Query".equals(intentName)) {
 			return queryDbForTimers(session.getUser().getUserId());
-		}
-//		else if ("Remove".equals(intentName)) {
-//			return deleteTimer(session.getUser().getUserId(), intent.getSlot("Food"));
-//		} 
-		else {
+		} else if ("Delete".equals(intentName)) {
+			return deleteTimer(session.getUser().getUserId(), intent.getSlot("Food"));
+		} else {
 			throw new SpeechletException("Invalid Intent");
 		}
 	}
@@ -156,49 +154,48 @@ public class KitchenTimerSpeechlet implements Speechlet {
 		}
 	}
 
-//	private SpeechletResponse deleteTimer(String userId, Slot foodItem) {
-//		
-//		final String CUSTOMER_ID = "Customer_ID";
-//		final String FOOD_ID = "Food_Item";
-//		final String COOKING_TIMER_TABLE = "Cooking_Timer";
-//		
-//		AmazonDynamoDBClient timerDb = new AmazonDynamoDBClient();
-//		DynamoDB dynamoDb = new DynamoDB(timerDb);
-//		Table dbTable = dynamoDb.getTable(COOKING_TIMER_TABLE);
-//		DeleteItemOutcome itemResults = dbTable.deleteItem(CUSTOMER_ID, userId, FOOD_ID, foodItem);
-//		
-//		if(itemResults.getDeleteItemResult() != null ){
-//			
-//			String timerCouldBeDeleted = foodItem + " timer was successfully deleted.";
-//
-//			// Create the Simple card content.
-//			SimpleCard card = new SimpleCard();
-//			card.setTitle("No Timers Running");
-//			card.setContent(timerCouldBeDeleted);
-//
-//			// Create the plain text output.
-//			PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
-//			speech.setText(timerCouldBeDeleted);
-//
-//			return SpeechletResponse.newTellResponse(speech);
-//		
-//		} else {
-//			
-//			String timerCouldNotBeDeleted = "Sorry, that timer you requested does not exist. Please try again.";
-//
-//			// Create the Simple card content.
-//			SimpleCard card = new SimpleCard();
-//			card.setTitle("No Timers Running");
-//			card.setContent(timerCouldNotBeDeleted);
-//
-//			// Create the plain text output.
-//			PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
-//			speech.setText(timerCouldNotBeDeleted);
-//
-//			return SpeechletResponse.newTellResponse(speech);
-//		}
-//		
-//	}
+	private SpeechletResponse deleteTimer(String userId, Slot foodItem) {
+
+		final String CUSTOMER_ID = "Customer_ID";
+		final String FOOD_ID = "Food_Item";
+		final String COOKING_TIMER_TABLE = "Cooking_Timer";
+
+		AmazonDynamoDBClient timerDb = new AmazonDynamoDBClient();
+		DynamoDB dynamoDb = new DynamoDB(timerDb);
+		Table dbTable = dynamoDb.getTable(COOKING_TIMER_TABLE);
+		DeleteItemOutcome deleteResults = dbTable.deleteItem(CUSTOMER_ID, userId, FOOD_ID, foodItem);
+
+		if (deleteResults.getDeleteItemResult() != null) {
+			String timerCouldBeDeleted = foodItem + " timer was successfully deleted.";
+
+			// Create the Simple card content.
+			SimpleCard card = new SimpleCard();
+			card.setTitle("Timer deleted");
+			card.setContent(timerCouldBeDeleted);
+
+			// Create the plain text output.
+			PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+			speech.setText(timerCouldBeDeleted);
+
+			return SpeechletResponse.newTellResponse(speech);
+
+		} else {
+
+			String timerCouldBeDeleted = "Sorry, there was no timer to be deleted";
+
+			// Create the Simple card content.
+			SimpleCard card = new SimpleCard();
+			card.setTitle("No Timers Running");
+			card.setContent(timerCouldBeDeleted);
+
+			// Create the plain text output.
+			PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+			speech.setText(timerCouldBeDeleted);
+
+			return SpeechletResponse.newTellResponse(speech);
+
+		}
+	}
 
 	@Override
 	public SpeechletResponse onLaunch(LaunchRequest arg0, Session arg1) throws SpeechletException {
