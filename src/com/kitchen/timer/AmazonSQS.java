@@ -13,6 +13,11 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 
+/**
+ * This class is dedicated the AmazonSQS service as the daemon for the timer
+ * @author cody
+ *
+ */
 public class AmazonSQS {
 	
 	private final static String COOKING_TIMER_TABLE = "Cooking_Timer";
@@ -30,6 +35,7 @@ public class AmazonSQS {
 			ReceiveMessageResult sqsRMR = sqsClient.receiveMessage(SQS_URL);
 			for (Message rmrMessage : sqsRMR.getMessages()) {
 				
+				// Loop over the incomming message, get the customer id and food id, then use those to query the db then call the timer.
 				String message[] = rmrMessage.getBody().split(",");
 				AmazonDynamoDBClient cookingTimerDb = new AmazonDynamoDBClient();
 				DynamoDB dynamoDb = new DynamoDB(cookingTimerDb);
@@ -40,7 +46,7 @@ public class AmazonSQS {
 				while(itemResultsIterator.hasNext()){
 					queryResult = itemResultsIterator.next();	
 				}
-				KitchenTimerScheduler timerDaemon = new KitchenTimerScheduler(queryResult.getString(FOOD_ID), queryResult.getString(DURATION_TIME_IN_MILIS), CUSTOMER_ID, message[0], FOOD_ID, message[1]);
+				KitchenTimerScheduler kitchenScheduler = new KitchenTimerScheduler(queryResult.getString(FOOD_ID), queryResult.getString(DURATION_TIME_IN_MILIS), CUSTOMER_ID, message[0], FOOD_ID, message[1]);
 				sqsClient.deleteMessage(SQS_URL, rmrMessage.getReceiptHandle());
 			}
 		}

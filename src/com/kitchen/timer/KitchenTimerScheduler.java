@@ -14,6 +14,11 @@ import com.amazonaws.services.simpleemail.model.Destination;
 import com.amazonaws.services.simpleemail.model.Message;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 
+/**
+ * This class is designed to be initiate multiple timers for Alexa, delete them when they are finished and send an email as well.
+ * @author cody
+ *
+ */
 public class KitchenTimerScheduler {
 
 	private long taskDuration;
@@ -21,13 +26,25 @@ public class KitchenTimerScheduler {
 	private final static String CUSTOMER_ID = "Customer_ID";
 	private final static String FOOD_ID = "Food_Item";
 
+	/**
+	 * This method with kick of a timer thread, send an email when it's done as its "Push Notification" and the delete the timer from the db
+	 * @param taskName - the name for the timer task
+	 * @param durationInMilis - how long will the timer be in miliseconds
+	 * @param customerId - the hashed key id for the echo
+	 * @param userId - the session id for the echo
+	 * @param foodId - a range key for the dynamo db
+	 * @param foodItem - attribute relating the to the food id
+	 */
 	public KitchenTimerScheduler(String taskName, String durationInMilis, String customerId, String userId,
 			String foodId, String foodItem) {
 
 		this.taskDuration = Long.parseLong(durationInMilis);
 
 		System.out.println("Timer for " + taskName + " has started.");
-
+		
+		/**
+		 * Simple timer task that will schedule a timer and run based on the duration and when complete will send an email and delete the timer from the db.
+		 */
 		TimerTask timerTask = new TimerTask() {
 
 			int counter = 0;
@@ -100,19 +117,14 @@ public class KitchenTimerScheduler {
 		Timer timer = new Timer(taskName);// create a new Timer
 
 		timer.schedule(timerTask, taskDuration);// this line
-																// starts the
-		// timer at the same
-		// time its executed
-
-		//
-		// Runnable task = () -> {
-		//
-		// System.out.println("Timer for " + taskName + " has completed.");
-		//
-		// };
 
 	}
 
+	/**
+	 * This method will delete the timer once it is completed
+	 * @param user - the session id for the echo
+	 * @param food - the timer to be deleted
+	 */
 	private void deleteTask(String user, String food) {
 
 		AmazonDynamoDBClient timerDb = new AmazonDynamoDBClient();

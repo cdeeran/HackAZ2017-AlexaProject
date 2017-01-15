@@ -34,7 +34,10 @@ public class KitchenTimerSpeechlet implements Speechlet {
 		// any initialization logic goes here
 
 	}
-
+	
+	/**
+	 * This is part of the Speechlet Interface. Where Alex will determine what intent to run based on her natural lang. processing.
+	 */
 	@Override
 	public SpeechletResponse onIntent(final IntentRequest request, final Session session) throws SpeechletException {
 
@@ -42,7 +45,7 @@ public class KitchenTimerSpeechlet implements Speechlet {
 		String intentName = (intent != null) ? intent.getName() : null;
 
 		if ("Cook".equals(intentName)) {
-			return getCookingTimerResponse(intent.getSlot("Food"), intent.getSlot("Time"),
+			return createTimer(intent.getSlot("Food"), intent.getSlot("Time"),
 					session.getUser().getUserId());
 		} else if ("Query".equals(intentName)) {
 			return queryDbForTimers(session.getUser().getUserId());
@@ -58,7 +61,14 @@ public class KitchenTimerSpeechlet implements Speechlet {
 		// any cleanup logic goes here
 	}
 
-	private SpeechletResponse getCookingTimerResponse(Slot food, Slot time, String userId) {
+	/**
+	 * This method will create a new timer and add it to the Dynamo DB. Then send a message the queque that will start the timer process in the background.
+	 * @param food - the type of timer
+	 * @param time - how long with the timer run
+	 * @param userId - the session id with the echo
+	 * @return - a confirmation if the timer has been created
+	 */
+	private SpeechletResponse createTimer(Slot food, Slot time, String userId) {
 
 		final String CUSTOMER_ID = "Customer_ID";
 		final String FOOD_ID = "Food_Item";
@@ -98,6 +108,11 @@ public class KitchenTimerSpeechlet implements Speechlet {
 		return SpeechletResponse.newTellResponse(speech);
 	}
 
+	/**
+	 * This intent will query for timers that are currently "in progress"
+	 * @param userId - the session id for the user
+	 * @return the list of running timers or say there are none
+	 */
 	private SpeechletResponse queryDbForTimers(String userId) {
 
 		final String CUSTOMER_ID = "Customer_ID";
@@ -154,12 +169,19 @@ public class KitchenTimerSpeechlet implements Speechlet {
 		}
 	}
 
+	/**
+	 * This will method is still in beta, it is designed to delete a timer.
+	 * @param userId - for the echo session
+	 * @param foodItem - the type of timer to delete
+	 * @return a confirmation if the timer has been deleted
+	 */
 	private SpeechletResponse deleteTimer(String userId, Slot foodItem) {
 
 		final String CUSTOMER_ID = "Customer_ID";
 		final String FOOD_ID = "Food_Item";
 		final String COOKING_TIMER_TABLE = "Cooking_Timer";
 
+		// Search the Dynamo DB
 		AmazonDynamoDBClient timerDb = new AmazonDynamoDBClient();
 		DynamoDB dynamoDb = new DynamoDB(timerDb);
 		Table dbTable = dynamoDb.getTable(COOKING_TIMER_TABLE);
@@ -202,9 +224,4 @@ public class KitchenTimerSpeechlet implements Speechlet {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	// private SpeechletResponse getHelpResponse() {
-	// // TODO Auto-generated method stub
-	// return null;
-	// }
 }
